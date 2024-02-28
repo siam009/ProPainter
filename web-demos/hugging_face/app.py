@@ -542,6 +542,7 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=css) as iface:
         inputs=[
             video_input, video_state
         ],
+        concurrency_limit=1,
         outputs=[video_state, video_info, template_frame,
                  image_selection_slider, track_pause_number_slider,point_prompt, clear_button_click, Add_mask_button, template_frame,
                  tracking_video_predict_button, tracking_video_output, inpaiting_video_output, remove_mask_button, inpaint_video_predict_button, step2_title, step3_title,mask_dropdown, run_status, run_status2]
@@ -566,12 +567,14 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=css) as iface:
     Add_mask_button.click(
         fn=add_multi_mask,
         inputs=[video_state, interactive_state, mask_dropdown],
+        concurrency_limit=1,
         outputs=[interactive_state, mask_dropdown, template_frame, click_state, run_status, run_status2]
     )
 
     remove_mask_button.click(
         fn=remove_multi_mask,
         inputs=[interactive_state, mask_dropdown],
+        concurrency_limit=1,
         outputs=[interactive_state, mask_dropdown, run_status, run_status2]
     )
 
@@ -579,12 +582,14 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=css) as iface:
     tracking_video_predict_button.click(
         fn=vos_tracking_video,
         inputs=[video_state, interactive_state, mask_dropdown],
+        concurrency_limit=1,
         outputs=[tracking_video_output, video_state, interactive_state, run_status, run_status2]
     )
 
     # inpaint video from select image and mask
     inpaint_video_predict_button.click(
         fn=inpaint_video,
+        concurrency_limit=1,
         inputs=[video_state, resize_ratio_number, dilate_radius_number, raft_iter_number, subvideo_length_number, neighbor_length_number, ref_stride_number, mask_dropdown],
         outputs=[inpaiting_video_output, run_status, run_status2]
     )
@@ -631,6 +636,7 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=css) as iface:
     clear_button_click.click(
         fn = clear_click,
         inputs = [video_state, click_state,],
+        concurrency_limit=1,
         outputs = [template_frame,click_state, run_status, run_status2],
     )
 
@@ -642,5 +648,5 @@ with gr.Blocks(theme=gr.themes.Monochrome(), css=css) as iface:
     )
     gr.Markdown(article)
 
-iface.queue(concurrency_count=1)
+iface.queue()
 iface.launch(debug=True)
