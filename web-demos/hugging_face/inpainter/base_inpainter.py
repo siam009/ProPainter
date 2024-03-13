@@ -18,6 +18,13 @@ from core.utils import to_tensors
 import warnings
 warnings.filterwarnings("ignore")
 
+import uuid
+from torchvision.transforms import transforms as transforms
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+transform = transforms.ToPILImage()
+
+
 
 def imwrite(img, file_path, params=None, auto_mkdir=True):
 	if auto_mkdir:
@@ -188,6 +195,25 @@ class ProInpainter:
 			self.fix_flow_complete = self.fix_flow_complete.half()
 			self.model = self.model.half()
 
+	def save_masks_to_disk(self, np_masks):
+		output_folder = str(uuid.uuid4())
+		os.makedirs(output_folder, exist_ok=True)
+
+		for i in range(np_masks.shape[0]):  # Iterate over the batch size
+			single_image = np_masks[i, 0, :, :].cpu().numpy()
+			print(single_image.shape)
+			pil_image = Image.fromarray((single_image * 255).astype('uint8'))  # Assuming pixel values are in the range [0, 1]
+			print(pil_image.size)
+
+			# Save the image
+			image_path = os.path.join(output_folder, f"frame_{i + 1}.png")
+			pil_image.save(image_path)
+
+		# for i, frame in enumerate(np_masks):
+		# 	# image = Image.fromarray(frame)
+		# 	image_path = os.path.join(output_folder, f"frame_{i + 1}.png")
+		# 	frame.save(image_path)
+
 	def inpaint(self, npframes, masks, ratio=1.0, dilate_radius=4, raft_iter=20, subvideo_length=80, neighbor_length=10, ref_stride=10):
 		"""
 		Perform Inpainting for video subsets
@@ -215,6 +241,9 @@ class ProInpainter:
 		flow_masks = to_tensors()(flow_masks).unsqueeze(0)
 		masks_dilated = to_tensors()(masks_dilated).unsqueeze(0)
 		frames, flow_masks, masks_dilated = frames.to(self.device), flow_masks.to(self.device), masks_dilated.to(self.device)
+
+		# print(flow_masks[0].shape)
+		self.save_masks_to_disk(flow_masks)
 		
 		##############################################
 		# ProPainter inference
